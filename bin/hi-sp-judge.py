@@ -53,38 +53,6 @@ while True:
       if pressKeyPlayer == 1: p1_pos[1] = p1_pos[1] + P_MOVE_SPEED 
       else: p2_pos[1] = p2_pos[1] + P_MOVE_SPEED 
 
-    if pressKeyMode == "leftUp":
-      if pressKeyPlayer == 1:
-        p1_pos[0] = p1_pos[0] - P_MOVE_SPEED
-        p1_pos[1] = p1_pos[1] - P_MOVE_SPEED 
-      else:
-        p2_pos[0] = p2_pos[0] - P_MOVE_SPEED
-        p2_pos[1] = p2_pos[1] - P_MOVE_SPEED 
-
-    if pressKeyMode == "rightUp":
-      if pressKeyPlayer == 1:
-        p1_pos[0] = p1_pos[0] + P_MOVE_SPEED 
-        p1_pos[1] = p1_pos[1] - P_MOVE_SPEED 
-      else:
-        p2_pos[0] = p2_pos[0] + P_MOVE_SPEED 
-        p2_pos[1] = p2_pos[1] - P_MOVE_SPEED 
-    
-    if pressKeyMode == "rightDown":
-      if pressKeyPlayer == 1:
-        p1_pos[0] = p1_pos[0] + P_MOVE_SPEED 
-        p1_pos[1] = p1_pos[1] + P_MOVE_SPEED 
-      else:
-        p2_pos[0] = p2_pos[0] + P_MOVE_SPEED 
-        p2_pos[1] = p2_pos[1] + P_MOVE_SPEED 
-
-    if pressKeyMode == "leftDown":
-      if pressKeyPlayer == 1:
-        p1_pos[0] = p1_pos[0] - P_MOVE_SPEED 
-        p1_pos[1] = p1_pos[1] + P_MOVE_SPEED 
-      else:
-        p2_pos[0] = p2_pos[0] - P_MOVE_SPEED 
-        p2_pos[1] = p2_pos[1] + P_MOVE_SPEED 
-
     if event.type == pygame.locals.KEYDOWN:  # キーを押したとき
       print('key down!!!')
       if event.key == pygame.locals.K_ESCAPE: # 終了
@@ -92,7 +60,7 @@ while True:
         sys.exit()
       
       #player1
-      if pygame.key.name(event.key) == 'a':
+      if pygame.key.name(event.key) == 's' or pygame.key.name(event.key) == 'a':
         pressKeyMode = "left" 
         pressKeyPlayer = 1
       elif pygame.key.name(event.key) == 'f':
@@ -101,47 +69,22 @@ while True:
       elif pygame.key.name(event.key) == 'e':
         pressKeyMode = "up" 
         pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'c':
+      elif pygame.key.name(event.key) == 'd':
         pressKeyMode = "down" 
         pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'q' or pygame.key.name(event.key) == 'w':
-        pressKeyMode = "leftUp" 
-        pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'r':
-        pressKeyMode = "rightUp" 
-        pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'v':
-        pressKeyMode = "rightDown" 
-        pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'z':
-        pressKeyMode = "leftDown" 
-        pressKeyPlayer = 1
-      #player2
+     #player2
       elif pygame.key.name(event.key) == 'j':
         pressKeyMode = "left" 
         pressKeyPlayer = 2 
-      elif pygame.key.name(event.key) == ';':
+      elif pygame.key.name(event.key) == ';' or pygame.key.name(event.key) == 'l':
         pressKeyMode = "right" 
         pressKeyPlayer = 2
       elif pygame.key.name(event.key) == 'i':
         pressKeyMode = "up" 
         pressKeyPlayer = 2
-      elif pygame.key.name(event.key) == ',':
+      elif pygame.key.name(event.key) == 'k':
         pressKeyMode = "down" 
         pressKeyPlayer = 2
-      elif pygame.key.name(event.key) == 'u':
-        pressKeyMode = "leftUp" 
-        pressKeyPlayer = 2
-      elif pygame.key.name(event.key) == 'o' or pygame.key.name(event.key) == 'p':
-        pressKeyMode = "rightUp" 
-        pressKeyPlayer = 2
-      elif pygame.key.name(event.key) == '/':
-        pressKeyMode = "rightDown" 
-        pressKeyPlayer = 2
-      elif pygame.key.name(event.key) == 'm':
-        pressKeyMode = "leftDown" 
-        pressKeyPlayer = 2
-
 
       else:
         pressKeyMode = ""
