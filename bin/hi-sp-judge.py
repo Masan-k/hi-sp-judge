@@ -1,8 +1,4 @@
-import pygame
-import pygame.locals
-import sys
-import math
-import keyboard
+import pygame,pygame.locals,sys,math
 import numpy as np
 SCREEN_SIZE = (800, 600)
 FIELD_WIDTH = 600
@@ -12,16 +8,12 @@ INIT_X = 100
 INIT_Y = 100
 P_MOVE_SPEED = 8 
 P_RADIUS = 10
-GOAL_ARIA_WIDTH = 150
-
 BALL_RADIUS = 5 
+GOAL_ARIA_WIDTH = 150
 
 ball_pos = [150,150]
 p1_pos = [200,200]
 p2_pos = [400,200]
-
-pressKeyMode = "" 
-pressKeyPlayer = ""
 
 pygame.init()
 joy = pygame.joystick.Joystick(0)
@@ -29,7 +21,6 @@ joy.init()
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption("HI-SP-JUDGE")
-
 
 font = pygame.font.Font(None,15)
 status = "init"
@@ -41,6 +32,11 @@ passMarkerPos = [0,0]
 
 while True:
   screen.fill((0,0,0))
+
+  #---------------
+  #スタートで初期化
+  #---------------
+  if joy.get_button(7) == 1: status = 'init'
 
   if status == 'init':
     status = 'p1keep'
@@ -88,14 +84,12 @@ while True:
   #パス処理
   #--------
   if joy.get_button(4) == 1 or joy.get_button(5) == 1:
-    screen.blit(font.render('pass!!', True, (255, 255, 255)), [10, 50])
-
     if status == 'p1keep': status = "p1pass"
     if status == 'p2keep': status = "p2pass"
       
     ballPassPosX = ball_pos[0]
     ballPassPosY = ball_pos[1]
-    ballMoveDistance = [(passMarkerPos[0] - ball_pos[0]) /1000,(passMarkerPos[1] - ball_pos[1])/1000]
+    ballMoveDistance = [(passMarkerPos[0] - ball_pos[0]) /100,(passMarkerPos[1] - ball_pos[1])/100]
 
   #------------
   #コートの描画
@@ -165,7 +159,6 @@ while True:
   
     pygame.draw.circle(screen, (255,255,255), ball_pos , BALL_RADIUS)
 
-  screen.blit(font.render('status : ' + str(status) , True, (255, 255, 255)), [10, 10]) 
   
   #自キャラの描画1
   pygame.draw.circle(screen, (200,255,200), p1_pos , P_RADIUS)
@@ -201,40 +194,13 @@ while True:
          and ballPassPosY <= INIT_Y + FIELD_HEIGHT:
         status = 'getPoint'
 
+  screen.blit(font.render('status : ' + str(status) , True, (255, 255, 255)), [10, 10]) 
   pygame.display.update()
   
   for event in pygame.event.get():
-    #移動処理(前フレーム）
-    if pressKeyMode == "left": 
-      if pressKeyPlayer == 1: p1_pos[0] = p1_pos[0] - P_MOVE_SPEED
-      else: p2_pos[0] = p2_pos[0] - P_MOVE_SPEED
-    if pressKeyMode == "right":
-      if pressKeyPlayer == 1: p1_pos[0] = p1_pos[0] + P_MOVE_SPEED 
-      else: p2_pos[0] = p2_pos[0] + P_MOVE_SPEED 
-    if pressKeyMode == "up":
-      if pressKeyPlayer == 1: p1_pos[1] = p1_pos[1] - P_MOVE_SPEED 
-      else: p2_pos[1] = p2_pos[1] - P_MOVE_SPEED 
-    if pressKeyMode == "down":
-      if pressKeyPlayer == 1: p1_pos[1] = p1_pos[1] + P_MOVE_SPEED 
-      else: p2_pos[1] = p2_pos[1] + P_MOVE_SPEED 
-
-    
     #キー入力処理
     if event.type == pygame.locals.KEYDOWN: 
       #終了処理
       if event.key == pygame.locals.K_ESCAPE:
         pygame.quit()
         sys.exit()
-      
-      elif pygame.key.name(event.key) == '1':
-        #リスタート
-        status = 'init'
-
-      else:
-        pressKeyMode = ""
-        #print("押されたキー = " + pygame.key.name(event.key))
-
-    # キーを話した時
-    if event.type == pygame.locals.KEYUP:  
-      pressKeyMode = ""
-      #print('key up!!!')
