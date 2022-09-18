@@ -11,6 +11,10 @@ P_RADIUS = 10
 BALL_RADIUS = 5 
 GOAL_ARIA_WIDTH = 150
 
+COLOR_JOY_LEFT = [150,150,255]
+COLOR_JOY_RIGHT = [255,150,150]
+COLOR_JOY_STOP = [150,150,150]
+
 ball_pos = [150,150]
 p1_pos = [200,200]
 p2_pos = [400,200]
@@ -29,6 +33,8 @@ ballPassPosX = 0
 ballPassPosY = 0
 ballMoveDistance = [0,0]
 passMarkerPos = [0,0]
+
+clock= pygame.time.Clock()
 
 while True:
   screen.fill((0,0,0))
@@ -54,31 +60,42 @@ while True:
   x1 = joy.get_axis(3)
   y1 = joy.get_axis(4)
 
-  pygame.draw.rect(screen,(255,255,255),(400,10,80,80))
-  pygame.draw.rect(screen,(0,0,0),(401,11,78,78))
-  pygame.draw.circle(screen,(200,255,200),(440 + x0*40 ,50 + y0*40),5)
+  pygame.draw.rect(screen,(255,255,255),(200,10,80,80))
+  pygame.draw.rect(screen,(0,0,0),(201,11,78,78))
+  pygame.draw.circle(screen, COLOR_JOY_LEFT, (240 + x0*40 ,50 + y0*40),5)
   
-  pygame.draw.rect(screen,(255,255,255),(500,10,80,80))
-  pygame.draw.rect(screen,(0,0,0),(501,11,78,78))
-  pygame.draw.circle(screen,(200,200,255),(540 + x1*40 ,50 + y1*40),5)
+  pygame.draw.rect(screen,(255,255,255),(300,10,80,80))
+  pygame.draw.rect(screen,(0,0,0),(301,11,78,78))
+  pygame.draw.circle(screen, COLOR_JOY_RIGHT,(340 + x1*40 ,50 + y1*40),5)
+
+  if joy.get_button(9) == 0: sp0 = 3
+  else: sp0 = 5
+
+  if joy.get_button(10) == 0: sp1 = 3
+  else: sp1 = 5
 
   if status != 'p1keep':
-    p1_pos[0] = p1_pos[0] + x0
-    p1_pos[1] = p1_pos[1] + y0
+    p1_pos[0] = p1_pos[0] + x0*sp0
+    p1_pos[1] = p1_pos[1] + y0*sp0
   else:
     #パスのベクトルを示すマーカー
-    passMarkerPos[0] = passMarkerPos[0] + x0*3
-    passMarkerPos[1] = passMarkerPos[1] + y0*3
+    passMarkerPos[0] = passMarkerPos[0] + x0*5
+    passMarkerPos[1] = passMarkerPos[1] + y0*5
      
   if status != 'p2keep':
-    p2_pos[0] = p2_pos[0] + x1
-    p2_pos[1] = p2_pos[1] + y1
+    p2_pos[0] = p2_pos[0] + x1*sp1
+    p2_pos[1] = p2_pos[1] + y1*sp1
+    markColor = COLOR_JOY_LEFT
   else:
-    passMarkerPos[0] = passMarkerPos[0] + x1*3
-    passMarkerPos[1] = passMarkerPos[1] + y1*3
+    passMarkerPos[0] = passMarkerPos[0] + x1*5
+    passMarkerPos[1] = passMarkerPos[1] + y1*5
+    markColor = COLOR_JOY_RIGHT
 
-  pygame.draw.line(screen,(255,255,255),(passMarkerPos[0]-10,passMarkerPos[1]-10),(passMarkerPos[0]+10,passMarkerPos[1]+10))
-  pygame.draw.line(screen,(255,255,255),(passMarkerPos[0]+10,passMarkerPos[1]-10),(passMarkerPos[0]-10,passMarkerPos[1]+10))
+  if status == 'p1pass' or status == 'p2pass':
+    markColor = COLOR_JOY_STOP
+
+  pygame.draw.line(screen,markColor,(passMarkerPos[0]-10,passMarkerPos[1]-10),(passMarkerPos[0]+10,passMarkerPos[1]+10))
+  pygame.draw.line(screen,markColor,(passMarkerPos[0]+10,passMarkerPos[1]-10),(passMarkerPos[0]-10,passMarkerPos[1]+10))
 
   #--------
   #パス処理
@@ -158,11 +175,17 @@ while True:
     ball_pos[1] = pPos[1] - ballY
   
     pygame.draw.circle(screen, (255,255,255), ball_pos , BALL_RADIUS)
-
   
   #自キャラの描画1
-  pygame.draw.circle(screen, (200,255,200), p1_pos , P_RADIUS)
-  pygame.draw.circle(screen, (200,200,255), p2_pos , P_RADIUS)
+  if status == 'p1keep': 
+    pygame.draw.circle(screen, COLOR_JOY_STOP, p1_pos , P_RADIUS)
+  else:
+    pygame.draw.circle(screen, COLOR_JOY_LEFT, p1_pos , P_RADIUS)
+
+  if status == 'p2keep': 
+    pygame.draw.circle(screen, COLOR_JOY_STOP, p2_pos , P_RADIUS)
+  else:
+    pygame.draw.circle(screen, COLOR_JOY_RIGHT, p2_pos , P_RADIUS)
 
   #---------------------
   #ボールの描画
@@ -195,12 +218,12 @@ while True:
         status = 'getPoint'
 
   screen.blit(font.render('status : ' + str(status) , True, (255, 255, 255)), [10, 10]) 
+  screen.blit(font.render('fps : ' + str(round(clock.get_fps()*10)/10) , True, (255, 255, 255)), [10, 30]) 
   pygame.display.update()
+  clock.tick(60)
   
   for event in pygame.event.get():
-    #キー入力処理
     if event.type == pygame.locals.KEYDOWN: 
-      #終了処理
       if event.key == pygame.locals.K_ESCAPE:
         pygame.quit()
         sys.exit()
