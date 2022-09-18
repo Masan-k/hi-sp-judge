@@ -4,7 +4,7 @@ import sys
 import math
 import keyboard
 import numpy as np
-
+import copy
 SCREEN_SIZE = (800, 600)
 FIELD_WIDTH = 600
 FIELD_HEIGHT = 400
@@ -16,8 +16,8 @@ P_RADIUS = 10
 GOAL_ARIA_WIDTH = 150
 
 BALL_RADIUS = 5 
-ball_pos = [150,150]
 
+ball_pos = [150,150]
 p1_pos = [200,200]
 p2_pos = [400,200]
 
@@ -28,15 +28,21 @@ pygame.init()
 screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption("HI-SP-JUDGE")
 
-
 font = pygame.font.Font(None,15)
-status = "p1keep"
+status = "init"
 ballPassPos = [0,0]
 ballPassPosX = 0
 ballPassPosY = 0
 ballMoveDistance = [0,0]
 
 while True:
+
+  if status == 'init':
+    status = 'p1keep'
+    ball_pos = [150,150]
+    p1_pos = [200,200]
+    p2_pos = [400,200]
+
   screen.fill((0,0,0))
   #------------
   #コートの描画
@@ -48,6 +54,38 @@ while True:
 
   pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y))
   pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH, INIT_Y), (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH, INIT_Y + FIELD_HEIGHT))
+
+  pygame.draw.line(screen, (0,0,255),
+                   (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH + 3, INIT_Y + 3),
+                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + 3),width=3)
+
+  pygame.draw.line(screen, (0,0,255),
+                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + 3),
+                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + FIELD_HEIGHT - 3),width=3)
+  pygame.draw.line(screen, (0,0,255),
+                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + FIELD_HEIGHT - 3),
+                   (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH + 3,
+                   INIT_Y + FIELD_HEIGHT - 3),width=3)
+  pygame.draw.line(screen, (0,0,255),
+                   (INIT_X + FIELD_WIDTH  - GOAL_ARIA_WIDTH + 3,
+                    INIT_Y + FIELD_HEIGHT - 3),
+                   (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH + 3, INIT_Y + 3)
+                  ,width=3)
+##  pygame.draw.rect(screen, (0,0,255), (100,100,200,200))
+
+  #---------------------
+  #ボールコート外判定
+  #---------------------
+  #screen.blit(font.render('ballPassPosX : ' + str(ballPassPosX) , True, (255, 255, 255)), [10, 50]) 
+  #screen.blit(font.render('INIT_X : ' + str(INIT_X) , True, (255, 255, 255)), [10, 70]) 
+  if status == 'p1pass' or status == 'p2pass':
+    if ballPassPosX + BALL_RADIUS < INIT_X or \
+       ballPassPosY + BALL_RADIUS < INIT_Y or \
+       ballPassPosX - BALL_RADIUS > INIT_X + FIELD_WIDTH or \
+       ballPassPosY - BALL_RADIUS > INIT_Y + FIELD_HEIGHT:
+      status = 'offCourt'
+  if status == 'offCourt':
+    pygame.draw.circle(screen, (255, 0,0), [ballPassPosX,ballPassPosY] , BALL_RADIUS)
 
   #---------------------------------
   #ボールの描画(保持時)
@@ -69,8 +107,10 @@ while True:
       ballY = sin * (P_RADIUS + BALL_RADIUS)
     else: ballY = 0
         
-    if mouseX - pPos[0] < 0: ballX = -ballX
-    if mouseX - pPos[0] < 0: ballY = -ballY
+    if mouseX - pPos[0] < 0: 
+      ballX = -ballX
+      ballY = -ballY
+
     ball_pos[0] = pPos[0] + ballX
     ball_pos[1] = pPos[1] - ballY
   
@@ -83,24 +123,35 @@ while True:
   pygame.draw.circle(screen, (255,255,255), p2_pos , P_RADIUS)
 
   #---------------------
-  #ボールの描画（パス時)
+  #ボールの描画
   #---------------------
   if status == "p1pass" or status == "p2pass" :
     ballPassPosX = ballPassPosX + ballMoveDistance[0] 
     ballPassPosY = ballPassPosY + ballMoveDistance[1] 
     pygame.draw.circle(screen, (0,200,255), [ballPassPosX,ballPassPosY] , BALL_RADIUS)
 
-  a = [9999,9999]
-  if status == 'p1pass': a = np.array(p2_pos)
-  if status == 'p2pass': a = np.array(p1_pos)
+  #---------------------
+  #ボールのキャッチ判定
+  #---------------------
+  if status == 'p1pass' or status == 'p2pass':
+    
+    playerPos = [9999,9999]
+    if status == 'p1pass': playerPos = np.array(p2_pos)
+    elif status == 'p2pass': playerPos = np.array(p1_pos)
 
-  #a = np.array(p2_pos)
-  b = np.array([ballPassPosX, ballPassPosY])
-  norm = np.linalg.norm(a-b) 
-  screen.blit(font.render('norm : ' + str(norm), True, (255, 255, 255)), [10, 30]) 
-  if norm <= BALL_RADIUS + P_RADIUS:
-    if status == 'p1pass': status = 'p2keep'
-    if status == 'p2pass': status = 'p1keep'
+    ballPos = np.array([ballPassPosX, ballPassPosY])
+    norm = np.linalg.norm(playerPos - ballPos) 
+    #screen.blit(font.render('norm : ' + str(norm), True, (255, 255, 255)), [10, 30]) 
+    if norm <= BALL_RADIUS + P_RADIUS:
+      if status == 'p1pass':status = 'p2keep'
+      elif status == 'p2pass':status = 'p1keep'
+ 
+      # 得点判定
+      if ballPassPosX >= INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH \
+         and ballPassPosX <= INIT_X + FIELD_WIDTH \
+         and ballPassPosY >= INIT_Y \
+         and ballPassPosY <= INIT_Y + FIELD_HEIGHT:
+        status = 'getPoint'
 
   pygame.display.update()
   
@@ -137,31 +188,35 @@ while True:
         sys.exit()
       
       #player1の操作
-      if pygame.key.name(event.key) == 's' or pygame.key.name(event.key) == 'a':
+      if (pygame.key.name(event.key) == 's' or pygame.key.name(event.key) == 'a') and status != 'p1keep':
         pressKeyMode = "left" 
         pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'f':
+      elif pygame.key.name(event.key) == 'f' and status != 'p1keep':
         pressKeyMode = "right" 
         pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'e':
+      elif pygame.key.name(event.key) == 'e' and status != 'p1keep':
         pressKeyMode = "up" 
         pressKeyPlayer = 1
-      elif pygame.key.name(event.key) == 'd':
+      elif pygame.key.name(event.key) == 'd' and status != 'p1keep':
         pressKeyMode = "down" 
         pressKeyPlayer = 1
      #player2の操作
-      elif pygame.key.name(event.key) == 'j':
+      elif pygame.key.name(event.key) == 'j' and status != 'p2keep':
         pressKeyMode = "left" 
         pressKeyPlayer = 2 
-      elif pygame.key.name(event.key) == ';' or pygame.key.name(event.key) == 'l':
+      elif (pygame.key.name(event.key) == ';' or pygame.key.name(event.key) == 'l') and status != 'p2keep':
         pressKeyMode = "right" 
         pressKeyPlayer = 2
-      elif pygame.key.name(event.key) == 'i':
+      elif pygame.key.name(event.key) == 'i' and status != 'p2keep':
         pressKeyMode = "up" 
         pressKeyPlayer = 2
-      elif pygame.key.name(event.key) == 'k':
+      elif pygame.key.name(event.key) == 'k' and status != 'p2keep':
         pressKeyMode = "down" 
         pressKeyPlayer = 2
+      
+      elif pygame.key.name(event.key) == '1':
+        #リスタート
+        status = 'init'
 
       else:
         pressKeyMode = ""
