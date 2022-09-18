@@ -2,7 +2,8 @@ import pygame
 import pygame.locals
 import sys
 import math
-from pynput import keyboard
+import keyboard
+import numpy as np
 
 SCREEN_SIZE = (800, 600)
 FIELD_WIDTH = 600
@@ -29,7 +30,7 @@ pygame.display.set_caption("HI-SP-JUDGE")
 
 
 font = pygame.font.Font(None,15)
-status = "none"
+status = "p1keep"
 ballPassPos = [0,0]
 ballPassPosX = 0
 ballPassPosY = 0
@@ -51,61 +52,56 @@ while True:
   #---------------------------------
   #ボールの描画(保持時)
   #---------------------------------
-
-  #マウス座標
-  mouseX, mouseY = pygame.mouse.get_pos()
- 
-  if mouseX - p1_pos[0] != 0:
-    cos = math.cos(math.atan((p1_pos[1] - mouseY)/(mouseX - p1_pos[0])))
-    ballX = cos * (P_RADIUS + BALL_RADIUS)
-  else: ballX = 0
-     
-  if  mouseX - p1_pos[0] != 0:
-    sin = math.sin(math.atan((p1_pos[1] - mouseY)/(mouseX - p1_pos[0])))
-    ballY = sin * (P_RADIUS + BALL_RADIUS)
-  else: ballY = 0
-    
-  
-  if mouseX - p1_pos[0] < 0: ballX = -ballX
-  if mouseX - p1_pos[0] < 0: ballY = -ballY
-  ball_pos[0] = p1_pos[0] + ballX
-  ball_pos[1] = p1_pos[1] - ballY
-  pygame.draw.circle(screen, (0,200,255), ball_pos , BALL_RADIUS)
-  
-  #---------------------
-  #ボールの描画（パス時)
-  #---------------------
-  
-
-  #補助線の描画
-  #pygame.draw.line(screen, (255,255,255), (p1_pos), (mouseX, mouseY))
-
-  #角度を算出
-  #textMousePos = font.render('mouse_pos : ' + f'{mouseX}, {mouseY}', True, (255, 255, 255))
-  #screen.blit(textMousePos, [10, 10]) 
-
-  #ballAngle = math.atan((p1_pos[1] - mouseY)/(mouseX - p1_pos[0])) * 180/ math.pi
-  #screen.blit(font.render('angle: ' + str(ballAngle) , True, (255, 255, 255)), [10, 70]) 
-  #screen.blit(font.render('mouseY : ' + str(mouseY) , True, (255, 255, 255)), [10, 30]) 
-  #screen.blit(font.render('p1_pos[1] : ' + str(p1_pos[1]) , True, (255, 255, 255)), [10, 50]) 
-  #screen.blit(font.render('x : ' + str(mouseX - p1_pos[0]) , True, (255, 255, 255)), [10, 30]) 
-  #screen.blit(font.render('y : ' + str(p1_pos[1] - mouseY) , True, (255, 255, 255)), [10, 50]) 
-  #screen.blit(font.render('sin : ' + str(sin) , True, (255, 255, 255)), [10, 90]) 
-  #screen.blit(font.render('ballY : ' + str(ballY) , True, (255, 255, 255)), [10, 110]) 
+  #マウス座標の取得
+  if status == 'p1keep' or status == 'p2keep':
+    mouseX, mouseY = pygame.mouse.get_pos()
    
+    if status == 'p1keep': pPos = p1_pos
+    elif status == 'p2keep': pPos = p2_pos
+
+    if mouseX - pPos[0] != 0:
+      cos = math.cos(math.atan((pPos[1] - mouseY)/(mouseX - pPos[0])))
+      ballX = cos * (P_RADIUS + BALL_RADIUS)
+    else: ballX = 0
+       
+    if  mouseX - pPos[0] != 0:
+      sin = math.sin(math.atan((pPos[1] - mouseY)/(mouseX - pPos[0])))
+      ballY = sin * (P_RADIUS + BALL_RADIUS)
+    else: ballY = 0
+        
+    if mouseX - pPos[0] < 0: ballX = -ballX
+    if mouseX - pPos[0] < 0: ballY = -ballY
+    ball_pos[0] = pPos[0] + ballX
+    ball_pos[1] = pPos[1] - ballY
+  
+    pygame.draw.circle(screen, (0,200,255), ball_pos , BALL_RADIUS)
+
+  screen.blit(font.render('status : ' + str(status) , True, (255, 255, 255)), [10, 10]) 
+  
   #自キャラの描画1
   pygame.draw.circle(screen, (255,255,255), p1_pos , P_RADIUS)
   pygame.draw.circle(screen, (255,255,255), p2_pos , P_RADIUS)
 
-  #ボールバスの描画
-  if status == "pass":
-    pygame.draw.line(screen, (255,255,255), p1_pos, clickPos)
+  #---------------------
+  #ボールの描画（パス時)
+  #---------------------
+  if status == "p1pass" or status == "p2pass" :
     ballPassPosX = ballPassPosX + ballMoveDistance[0] 
     ballPassPosY = ballPassPosY + ballMoveDistance[1] 
-    pygame.draw.circle(screen, (255,0,0), [ballPassPosX,ballPassPosY] , BALL_RADIUS)
-    screen.blit(font.render('ballPassPos: ' + str(ballPassPosX) + "," + str(ballPassPosY) , True, (255, 255, 255)), [10, 70]) 
-    screen.blit(font.render('ballMoveDistance: ' + str(ballMoveDistance[0]) + "," + str(ballMoveDistance[1]) , True, (255, 255, 255)), [10, 90]) 
-    
+    pygame.draw.circle(screen, (0,200,255), [ballPassPosX,ballPassPosY] , BALL_RADIUS)
+
+  a = [9999,9999]
+  if status == 'p1pass': a = np.array(p2_pos)
+  if status == 'p2pass': a = np.array(p1_pos)
+
+  #a = np.array(p2_pos)
+  b = np.array([ballPassPosX, ballPassPosY])
+  norm = np.linalg.norm(a-b) 
+  screen.blit(font.render('norm : ' + str(norm), True, (255, 255, 255)), [10, 30]) 
+  if norm <= BALL_RADIUS + P_RADIUS:
+    if status == 'p1pass': status = 'p2keep'
+    if status == 'p2pass': status = 'p1keep'
+
   pygame.display.update()
   
   for event in pygame.event.get():
@@ -125,7 +121,9 @@ while True:
 
     
     if event.type == pygame.locals.MOUSEBUTTONDOWN:
-      status = "pass"
+      if status == 'p1keep': status = "p1pass"
+      if status == 'p2keep': status = "p2pass"
+      
       clickPos = pygame.mouse.get_pos()
       ballPassPosX = ball_pos[0]
       ballPassPosY = ball_pos[1]
