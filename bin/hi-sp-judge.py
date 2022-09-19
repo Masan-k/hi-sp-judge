@@ -1,23 +1,23 @@
-import pygame,pygame.locals,sys,math
+import pygame,pygame.locals,sys,math,copy
 import numpy as np
 SCREEN_SIZE = (800, 600)
-FIELD_WIDTH = 600
-FIELD_HEIGHT = 400
+FIELD_WIDTH = 400
+FIELD_HEIGHT = 500
 
-INIT_X = 100
-INIT_Y = 100
+INIT_X = 50
+INIT_Y = 50
 P_MOVE_SPEED = 8 
 P_RADIUS = 10
 BALL_RADIUS = 5 
-GOAL_ARIA_WIDTH = 150
+GOAL_ARIA = 150
 
 COLOR_JOY_LEFT = [150,150,255]
-COLOR_JOY_RIGHT = [255,150,150]
+COLOR_JOY_RIGHT = [100,255,100]
 COLOR_JOY_STOP = [150,150,150]
 
-ball_pos = [150,150]
-p1_pos = [200,200]
-p2_pos = [400,200]
+ball_pos = [0,0]
+p1_pos = [0,0]
+p2_pos = [0,0]
 
 pygame.init()
 joy = pygame.joystick.Joystick(0)
@@ -47,10 +47,23 @@ while True:
   if status == 'init':
     status = 'p1keep'
     ball_pos = [150,150]
-    p1_pos = [200,200]
-    p2_pos = [400,200]
-    passMarkerPos = [300,200]
+    p1_pos = [100,500]
+    p2_pos = [400,500]
+    passMarkerPos[0] = 300
+    passMarkerPos[1] = 500
 
+  #------------
+  #コートの描画
+  #------------
+  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y), (INIT_X + FIELD_WIDTH, INIT_Y))
+  pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH, INIT_Y), (INIT_X + FIELD_WIDTH, INIT_Y + FIELD_HEIGHT))
+  pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y + FIELD_HEIGHT))
+  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y))
+
+  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y + GOAL_ARIA), (INIT_X + FIELD_WIDTH , INIT_Y + GOAL_ARIA))
+  pygame.draw.rect(screen, (0,0,255), (INIT_X + 2 , INIT_Y + 2, FIELD_WIDTH - 3 , GOAL_ARIA - 3))
+  pygame.draw.rect(screen, (0,0,0), (INIT_X + 4 , INIT_Y + 4, FIELD_WIDTH - 7 , GOAL_ARIA - 7))
+ 
   #----------------------------
   #ゲームパッドによる移動処理
   #---------------------------
@@ -60,13 +73,13 @@ while True:
   x1 = joy.get_axis(3)
   y1 = joy.get_axis(4)
 
-  pygame.draw.rect(screen,(255,255,255),(200,10,80,80))
-  pygame.draw.rect(screen,(0,0,0),(201,11,78,78))
-  pygame.draw.circle(screen, COLOR_JOY_LEFT, (240 + x0*40 ,50 + y0*40),5)
+  pygame.draw.rect(screen,(0,0,255),(500,310,80,80))
+  pygame.draw.rect(screen,(0,0,0),(501,311,78,78))
+  pygame.draw.circle(screen, COLOR_JOY_LEFT, (540 + x0*40 ,350 + y0*40),5)
   
-  pygame.draw.rect(screen,(255,255,255),(300,10,80,80))
-  pygame.draw.rect(screen,(0,0,0),(301,11,78,78))
-  pygame.draw.circle(screen, COLOR_JOY_RIGHT,(340 + x1*40 ,50 + y1*40),5)
+  pygame.draw.rect(screen,(0,255,0),(600,310,80,80))
+  pygame.draw.rect(screen,(0,0,0),(601,311,78,78))
+  pygame.draw.circle(screen, COLOR_JOY_RIGHT,(640 + x1*40 ,350 + y1*40),5)
 
   if joy.get_button(9) == 0: sp0 = 3
   else: sp0 = 5
@@ -79,16 +92,16 @@ while True:
     p1_pos[1] = p1_pos[1] + y0*sp0
   else:
     #パスのベクトルを示すマーカー
-    passMarkerPos[0] = passMarkerPos[0] + x0*5
-    passMarkerPos[1] = passMarkerPos[1] + y0*5
+    passMarkerPos[0] = passMarkerPos[0] + x0*7
+    passMarkerPos[1] = passMarkerPos[1] + y0*7
      
   if status != 'p2keep':
     p2_pos[0] = p2_pos[0] + x1*sp1
     p2_pos[1] = p2_pos[1] + y1*sp1
     markColor = COLOR_JOY_LEFT
   else:
-    passMarkerPos[0] = passMarkerPos[0] + x1*5
-    passMarkerPos[1] = passMarkerPos[1] + y1*5
+    passMarkerPos[0] = passMarkerPos[0] + x1*7
+    passMarkerPos[1] = passMarkerPos[1] + y1*7
     markColor = COLOR_JOY_RIGHT
 
   if status == 'p1pass' or status == 'p2pass':
@@ -100,7 +113,7 @@ while True:
   #--------
   #パス処理
   #--------
-  if joy.get_button(4) == 1 or joy.get_button(5) == 1:
+  if (status == 'p1keep' or status =='p2keep') and (joy.get_button(4) == 1 or joy.get_button(5)) == 1:
     if status == 'p1keep': status = "p1pass"
     if status == 'p2keep': status = "p2pass"
       
@@ -108,35 +121,7 @@ while True:
     ballPassPosY = ball_pos[1]
     ballMoveDistance = [(passMarkerPos[0] - ball_pos[0]) /100,(passMarkerPos[1] - ball_pos[1])/100]
 
-  #------------
-  #コートの描画
-  #------------
-  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y), (INIT_X + FIELD_WIDTH, INIT_Y))
-  pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH, INIT_Y), (INIT_X + FIELD_WIDTH, INIT_Y + FIELD_HEIGHT))
-  pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y + FIELD_HEIGHT))
-  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y))
-
-  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y))
-  pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH, INIT_Y), (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH, INIT_Y + FIELD_HEIGHT))
-
-  pygame.draw.line(screen, (0,0,255),
-                   (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH + 3, INIT_Y + 3),
-                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + 3),width=3)
-
-  pygame.draw.line(screen, (0,0,255),
-                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + 3),
-                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + FIELD_HEIGHT - 3),width=3)
-  pygame.draw.line(screen, (0,0,255),
-                   (INIT_X + FIELD_WIDTH - 3, INIT_Y + FIELD_HEIGHT - 3),
-                   (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH + 3,
-                   INIT_Y + FIELD_HEIGHT - 3),width=3)
-  pygame.draw.line(screen, (0,0,255),
-                   (INIT_X + FIELD_WIDTH  - GOAL_ARIA_WIDTH + 3,
-                    INIT_Y + FIELD_HEIGHT - 3),
-                   (INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH + 3, INIT_Y + 3)
-                  ,width=3)
-
-  #---------------------
+ #---------------------
   #ボールコート外判定
   #---------------------
   if status == 'p1pass' or status == 'p2pass':
@@ -207,14 +192,17 @@ while True:
     ballPos = np.array([ballPassPosX, ballPassPosY])
     norm = np.linalg.norm(playerPos - ballPos) 
     if norm <= BALL_RADIUS + P_RADIUS:
-      if status == 'p1pass':status = 'p2keep'
-      elif status == 'p2pass':status = 'p1keep'
+      passMarkerPos[0] = ballPassPosX
+      passMarkerPos[1] = ballPassPosY
+
+      if status == 'p1pass': status = 'p2keep'
+      elif status == 'p2pass': status = 'p1keep'
  
       # 得点判定
-      if ballPassPosX >= INIT_X + FIELD_WIDTH - GOAL_ARIA_WIDTH \
+      if ballPassPosX >= INIT_X \
          and ballPassPosX <= INIT_X + FIELD_WIDTH \
          and ballPassPosY >= INIT_Y \
-         and ballPassPosY <= INIT_Y + FIELD_HEIGHT:
+         and ballPassPosY <= INIT_Y + GOAL_ARIA:
         status = 'getPoint'
 
   screen.blit(font.render('status : ' + str(status) , True, (255, 255, 255)), [10, 10]) 
