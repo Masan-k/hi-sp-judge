@@ -12,12 +12,14 @@ BALL_RADIUS = 5
 GOAL_ARIA = 150
 
 COLOR_JOY_LEFT = [150,150,255]
-COLOR_JOY_RIGHT = [100,255,100]
+COLOR_JOY_RIGHT = [150,255,150]
 COLOR_JOY_STOP = [150,150,150]
 
 ball_pos = [0,0]
 p1_pos = [0,0]
 p2_pos = [0,0]
+
+STAMINA_MAX = 100
 
 pygame.init()
 joy = pygame.joystick.Joystick(0)
@@ -52,8 +54,11 @@ while True:
     passMarkerPos[1] = 500
     stageCode = '0'
     stageName = 'TUTORIAL'
+    
+    p1_stamina = 100
+    p2_stamina = 100
 
-#------------
+  #------------
   #コートの描画
   #------------
   pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y), (INIT_X + FIELD_WIDTH, INIT_Y))
@@ -129,9 +134,12 @@ while True:
   screen.blit(subInfoFont.render('TIPS : ', True, (255, 255, 255)), [480, 450]) 
   screen.blit(subInfoFont.render('Stage selection is a numerical input on the keyboard.', True, (255, 255, 255)), [480, 470]) 
 
-
-
-  
+  screen.blit(subInfoFont.render('p1_stamina : ' + str(p1_stamina), True, (255, 255, 255)), [480, 490]) 
+  screen.blit(subInfoFont.render('p2_stamina : ' + str(p2_stamina), True, (255, 255, 255)), [480, 510]) 
+  pygame.draw.rect(screen, COLOR_JOY_LEFT,(526,330,38, 69))
+  pygame.draw.rect(screen, (0,0,0),(526,330,38, 69 * (STAMINA_MAX-p1_stamina)/100))
+  pygame.draw.rect(screen, COLOR_JOY_RIGHT,(686,330,38, 69))
+  pygame.draw.rect(screen, (0,0,0),(686,330,38, 69 * (STAMINA_MAX-p2_stamina)/100))
 
 
   #----------------------------
@@ -151,15 +159,36 @@ while True:
   pygame.draw.circle(screen, (0,0,0),(655,365),29)
   pygame.draw.circle(screen, COLOR_JOY_RIGHT,(655 + x1*30 ,365 + y1*30),5)
 
-  if joy.get_button(9) == 0: sp0 = 3
-  else: sp0 = 5
-  if joy.get_button(10) == 0: sp1 = 3
-  else: sp1 = 5
+  if joy.get_button(9) == 0:
+    sp0 = 3
+    if p1_stamina < STAMINA_MAX: p1_stamina = p1_stamina + 2
+  elif status != 'p1keep':
+    if p1_stamina > 0:
+      sp0 = 5
+      p1_stamina = p1_stamina - 3 
+    else:
+      sp0 = 3
+  else:
+    if p1_stamina < STAMINA_MAX: p1_stamina = p1_stamina + 2
+
+  
+  if joy.get_button(10) == 0:
+    sp1 = 3
+    if p2_stamina < STAMINA_MAX: p2_stamina = p2_stamina + 2
+  elif status != 'p2keep': 
+    if p2_stamina > 0:
+      sp1 = 5
+      p2_stamina = p2_stamina - 3 
+    else:
+      sp1 = 3
+  else:
+    if p2_stamina < STAMINA_MAX: p2_stamina = p2_stamina + 2
+ 
 
   if status != 'p1keep' and status != 'getPoint':
     p1_pos[0] = p1_pos[0] + x0*sp0
     p1_pos[1] = p1_pos[1] + y0*sp0
-    
+ 
   if status != 'p2keep' and status != 'getPoint':
     p2_pos[0] = p2_pos[0] + x1*sp1
     p2_pos[1] = p2_pos[1] + y1*sp1
