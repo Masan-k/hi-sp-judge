@@ -1,5 +1,10 @@
 import pygame,pygame.locals,sys,math,copy
 import numpy as np
+
+def drawMarkPass():
+  pygame.draw.line(screen,markColor,(passMarkerPos[0]-10,passMarkerPos[1]-10),(passMarkerPos[0]+10,passMarkerPos[1]+10))
+  pygame.draw.line(screen,markColor,(passMarkerPos[0]+10,passMarkerPos[1]-10),(passMarkerPos[0]-10,passMarkerPos[1]+10))
+
 SCREEN_SIZE = (800, 600)
 FIELD_WIDTH = 400
 FIELD_HEIGHT = 500
@@ -15,11 +20,14 @@ COLOR_JOY_LEFT = [150,150,255]
 COLOR_JOY_RIGHT = [150,255,150]
 COLOR_JOY_STOP = [150,150,150]
 
+STAMINA_MAX = 100
+MARKER_SPEED = 100;
+NO_PASS_DIS = 0.1
+NO_MOVE_DIS = 0.05
+
 ball_pos = [0,0]
 p1_pos = [0,0]
 p2_pos = [0,0]
-
-STAMINA_MAX = 100
 
 pygame.init()
 joy = pygame.joystick.Joystick(0)
@@ -36,8 +44,6 @@ ballPassPosX = 0
 ballPassPosY = 0
 ballMoveDistance = [0,0]
 passMarkerPos = [0,0]
-MARKER_SPEED = 100;
-
 clock= pygame.time.Clock()
 stageCode = ""
 stageName = ""
@@ -134,8 +140,6 @@ while True:
   screen.blit(subInfoFont.render('TIPS : ', True, (255, 255, 255)), [480, 450]) 
   screen.blit(subInfoFont.render('Stage selection is a numerical input on the keyboard.', True, (255, 255, 255)), [480, 470]) 
 
-  screen.blit(subInfoFont.render('p1_stamina : ' + str(p1_stamina), True, (255, 255, 255)), [480, 490]) 
-  screen.blit(subInfoFont.render('p2_stamina : ' + str(p2_stamina), True, (255, 255, 255)), [480, 510]) 
   pygame.draw.rect(screen, COLOR_JOY_LEFT,(526,330,38, 69))
   pygame.draw.rect(screen, (0,0,0),(526,330,38, 69 * (STAMINA_MAX-p1_stamina)/100))
   pygame.draw.rect(screen, COLOR_JOY_RIGHT,(686,330,38, 69))
@@ -147,6 +151,8 @@ while True:
   #---------------------------
   x0 = joy.get_axis(0)
   y0 = joy.get_axis(1)
+  screen.blit(subInfoFont.render('x0 : ' + str(x0), True, (255, 255, 255)), [480, 490]) 
+  screen.blit(subInfoFont.render('y0 : ' + str(y0), True, (255, 255, 255)), [480, 510]) 
 
   x1 = joy.get_axis(3)
   y1 = joy.get_axis(4)
@@ -165,7 +171,8 @@ while True:
   elif status != 'p1keep':
     if p1_stamina > 0:
       sp0 = 5
-      p1_stamina = p1_stamina - 3 
+      p1_stamina = p1_stamina - 4 
+      if p1_stamina < 0: p1_stamina = 0
     else:
       sp0 = 3
   else:
@@ -178,7 +185,8 @@ while True:
   elif status != 'p2keep': 
     if p2_stamina > 0:
       sp1 = 5
-      p2_stamina = p2_stamina - 3 
+      p2_stamina = p2_stamina - 4 
+      if p2_stamina < 0: p2_stamina = 0
     else:
       sp1 = 3
   else:
@@ -196,34 +204,36 @@ while True:
   #---------------------------
   #パスのベクトルマーカー制御
   #---------------------------
-  if status == 'p1keep':
+  isExistMark = False
+  if status == 'p1keep' and (NO_PASS_DIS <= abs(x0) or NO_PASS_DIS <= abs(y0)):
     passMarkerPos[0] = p1_pos[0] + x0 * MARKER_SPEED
     passMarkerPos[1] = p1_pos[1] + y0 * MARKER_SPEED
     markColor = COLOR_JOY_LEFT
 
-  if status == 'p2keep':
+    drawMarkPass()
+    isExistMark = True
+  if status == 'p2keep' and (NO_PASS_DIS <= abs(x1) or NO_PASS_DIS <= abs(y1)):
     passMarkerPos[0] = p2_pos[0] + x1 * MARKER_SPEED
     passMarkerPos[1] = p2_pos[1] + y1 * MARKER_SPEED
     markColor = COLOR_JOY_RIGHT
+    drawMarkPass()
+    isExistMark = True
  
   if status == 'p1pass' or status == 'p2pass':
     markColor = COLOR_JOY_STOP
-
-  pygame.draw.line(screen,markColor,(passMarkerPos[0]-10,passMarkerPos[1]-10),(passMarkerPos[0]+10,passMarkerPos[1]+10))
-  pygame.draw.line(screen,markColor,(passMarkerPos[0]+10,passMarkerPos[1]-10),(passMarkerPos[0]-10,passMarkerPos[1]+10))
+    drawMarkPass()
 
   #--------
   #パス処理
   #--------
-  if (status == 'p1keep' or status =='p2keep') and (joy.get_button(4) == 1 or joy.get_button(5)) == 1:
-    if status == 'p1keep': status = "p1pass"
-    if status == 'p2keep': status = "p2pass"
-      
+  if(joy.get_button(4) == 1 or joy.get_button(5)) == 1 and isExistMark:
     ballPassPosX = ball_pos[0]
     ballPassPosY = ball_pos[1]
     ballMoveDistance = [(passMarkerPos[0] - ball_pos[0]) /20,(passMarkerPos[1] - ball_pos[1])/20]
-
- #---------------------
+    if (status == 'p1keep'): status = "p1pass"
+    elif (status =='p2keep'): status = "p2pass"
+      
+  #---------------------
   #ボールコート外判定
   #---------------------
   if status == 'p1pass' or status == 'p2pass':
@@ -318,3 +328,5 @@ while True:
       if event.key == pygame.locals.K_ESCAPE:
         pygame.quit()
         sys.exit()
+
+
