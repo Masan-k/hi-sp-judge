@@ -20,6 +20,8 @@ COLOR_JOY_LEFT = [150,150,255]
 COLOR_JOY_RIGHT = [150,255,150]
 COLOR_JOY_STOP = [150,150,150]
 
+COLOR_DIFENSE = [255,150,150]
+
 STAMINA_MAX = 100
 MARKER_SPEED = 100;
 NO_PASS_DIS = 0.1
@@ -28,15 +30,18 @@ NO_MOVE_DIS = 0.05
 ball_pos = [0,0]
 p1_pos = [0,0]
 p2_pos = [0,0]
+p3_pos = [0,0]
+p4_pos = [0,0]
 
 pygame.init()
+
 joy = pygame.joystick.Joystick(0)
 joy.init()
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption("HI-SP-JUDGE")
 
-mainInfoFont= pygame.font.SysFont("ubuntu",20)
+mainInfoFont= pygame.font.SysFont("ubuntu",15)
 subInfoFont = pygame.font.SysFont("ubuntu",12)
 status = "init"
 ballPassPos = [0,0]
@@ -55,7 +60,10 @@ while True:
     status = 'p1keep'
     ball_pos = [150,150]
     p1_pos = [100,500]
+    p3_pos = [100,400]
+
     p2_pos = [400,500]
+    p4_pos = [400,400]
     passMarkerPos[0] = 300
     passMarkerPos[1] = 500
     stageCode = '0'
@@ -80,21 +88,25 @@ while True:
   #情報表示
   #------------
   #ステージ＆ステータス
-  screen.blit(mainInfoFont.render('STAGE', True, (255, 255, 255)), [500, 80]) 
-  screen.blit(mainInfoFont.render(' : ' + stageCode + "." + stageName, True, (255, 255, 255)), [580, 80]) 
+  screen.blit(mainInfoFont.render('STAGE', True, (255, 255, 255)), [470, 80]) 
+  screen.blit(mainInfoFont.render(' : ' + stageCode + "." + stageName, True, (255, 255, 255)), [550, 80]) 
 
   if status == 'p1pass' or status == 'p2pass' or status == 'p1keep' or status == 'p2keep':
     dispStatus = ' : ON OFFENCE'
     dispColor = [255,255,255]
   elif status == 'offCourt':
-    dispStatus = ' : FAILURE(OFF COURT)'
+    dispStatus = ' : FAILURE(OUT OF BOUNDS)'
     dispColor = [255,100,100]
   elif status == 'getPoint':
     dispStatus = ' : CLEAR!!'
     dispColor = [100,100,255]
+  elif status == 'interception':
+    dispStatus = ' : FAILURE(INTERCEPTION)'
+    dispColor = [255,100,100]
 
-  screen.blit(mainInfoFont.render('STATUS', True, (255, 255, 255)), [500, 120]) 
-  screen.blit(mainInfoFont.render(dispStatus, True, dispColor), [580, 120]) 
+
+  screen.blit(mainInfoFont.render('STATUS', True, (255, 255, 255)), [470, 120]) 
+  screen.blit(mainInfoFont.render(dispStatus, True, dispColor), [550, 120]) 
   #ゲームパッド
   pygame.draw.rect(screen, (255,255,255),(500,180,250,250))
   pygame.draw.rect(screen, (0,0,0),(501,181,248,248))
@@ -146,9 +158,9 @@ while True:
   pygame.draw.rect(screen, (0,0,0),(686,330,38, 69 * (STAMINA_MAX-p2_stamina)/100))
 
 
-  #----------------------------
-  #ゲームパッドによる移動処理
-  #---------------------------
+  #--------------------------------
+  #ゲームパッドによる移動処理(P1P2)
+  #--------------------------------
   x0 = joy.get_axis(0)
   y0 = joy.get_axis(1)
   screen.blit(subInfoFont.render('x0 : ' + str(x0), True, (255, 255, 255)), [480, 490]) 
@@ -242,11 +254,14 @@ while True:
        ballPassPosX - BALL_RADIUS > INIT_X + FIELD_WIDTH or \
        ballPassPosY - BALL_RADIUS > INIT_Y + FIELD_HEIGHT:
       status = 'offCourt'
-  if status == 'offCourt':
+
+  #---------------------------
+  #ボールの描画(ゲーム終了時)
+  #---------------------------
+  if status == 'offCourt' or status == "interception":
     pygame.draw.circle(screen, (255, 0,0), [ballPassPosX,ballPassPosY] , BALL_RADIUS)
   elif status == 'getPoint':
     pygame.draw.circle(screen, (0, 0, 255), [ballPassPosX,ballPassPosY] , BALL_RADIUS)
-
 
   #---------------------------------
   #ボールの描画(保持時)
@@ -276,7 +291,7 @@ while True:
   
     pygame.draw.circle(screen, (255,255,255), ball_pos , BALL_RADIUS)
   
-  #自キャラの描画1
+  #自キャラの描画
   if status == 'p1keep' or status == 'getPoint': 
     pygame.draw.circle(screen, COLOR_JOY_STOP, p1_pos , P_RADIUS)
   else:
@@ -287,13 +302,31 @@ while True:
   else:
     pygame.draw.circle(screen, COLOR_JOY_RIGHT, p2_pos , P_RADIUS)
 
+  #P3の描画
+  pygame.draw.circle(screen, COLOR_DIFENSE, p3_pos , P_RADIUS)
+  pygame.draw.circle(screen, COLOR_DIFENSE, p4_pos , P_RADIUS)
+
   #---------------------
-  #ボールの描画
+  #ボールの描画(パス中)
   #---------------------
   if status == "p1pass" or status == "p2pass" :
     ballPassPosX = ballPassPosX + ballMoveDistance[0] 
     ballPassPosY = ballPassPosY + ballMoveDistance[1] 
     pygame.draw.circle(screen, (255,255,255), [ballPassPosX,ballPassPosY] , BALL_RADIUS)
+
+  #---------------------
+  #ボールのカット判定
+  #---------------------
+  if status == "p1pass" or status == "p2pass" :
+    ballArray = np.array([ballPassPosX, ballPassPosY])
+
+    p3Array = np.array(p3_pos)
+    p3norm = np.linalg.norm(p3Array - ballArray) 
+    if p3norm <= BALL_RADIUS + P_RADIUS: status = "interception"
+      
+    p4Array = np.array(p4_pos)
+    p4norm = np.linalg.norm(p4Array - ballArray) 
+    if p4norm <= BALL_RADIUS + P_RADIUS: status = "interception"
 
   #---------------------
   #ボールのキャッチ判定
@@ -329,4 +362,23 @@ while True:
         pygame.quit()
         sys.exit()
 
+      #--------------------------------
+      #キーボードによる移動処理(P3,4)
+      #--------------------------------
+      if pygame.key.name(event.key) == 's' or pygame.key.name(event.key) == 'a':
+        p3_pos[0] = p3_pos[0] - 10 
+      elif pygame.key.name(event.key) == 'f':
+        p3_pos[0] = p3_pos[0] + 10 
+      elif pygame.key.name(event.key) == 'e':
+        p3_pos[1] = p3_pos[1] - 10 
+      elif pygame.key.name(event.key) == 'd':
+        p3_pos[1] = p3_pos[1] + 10 
 
+      elif pygame.key.name(event.key) == 'j':
+        p4_pos[0] = p4_pos[0] - 10 
+      elif pygame.key.name(event.key) == ';' or pygame.key.name(event.key) == 'l':
+        p4_pos[0] = p4_pos[0] + 10 
+      elif pygame.key.name(event.key) == 'i':
+        p4_pos[1] = p4_pos[1] - 10 
+      elif pygame.key.name(event.key) == 'k':
+        p4_pos[1] = p4_pos[1] + 10 
