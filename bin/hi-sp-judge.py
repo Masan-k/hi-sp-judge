@@ -5,6 +5,7 @@ def drawMarkPass():
   pygame.draw.line(screen,markColor,(passMarkerPos[0]-10,passMarkerPos[1]-10),(passMarkerPos[0]+10,passMarkerPos[1]+10))
   pygame.draw.line(screen,markColor,(passMarkerPos[0]+10,passMarkerPos[1]-10),(passMarkerPos[0]-10,passMarkerPos[1]+10))
 
+debugStatus = "init"
 SCREEN_SIZE = (800, 600)
 FIELD_WIDTH = 400
 FIELD_HEIGHT = 500
@@ -177,6 +178,7 @@ while True:
   pygame.draw.circle(screen, (0,0,0),(655,365),29)
   pygame.draw.circle(screen, COLOR_JOY_RIGHT,(655 + x1*30 ,365 + y1*30),5)
 
+  #P1加速設定
   if joy.get_button(9) == 0:
     sp0 = 3
     if p1_stamina < STAMINA_MAX: p1_stamina = p1_stamina + 2
@@ -190,7 +192,7 @@ while True:
   else:
     if p1_stamina < STAMINA_MAX: p1_stamina = p1_stamina + 2
 
-  
+  #P2加速設定
   if joy.get_button(10) == 0:
     sp1 = 3
     if p2_stamina < STAMINA_MAX: p2_stamina = p2_stamina + 2
@@ -204,14 +206,44 @@ while True:
   else:
     if p2_stamina < STAMINA_MAX: p2_stamina = p2_stamina + 2
  
+  p1Array = np.array(p1_pos)
+  p2Array = np.array(p2_pos)
+  p3Array = np.array(p3_pos)
+  p4Array = np.array(p4_pos)
 
+  #P1移動
   if status != 'p1keep' and status != 'getPoint':
-    p1_pos[0] = p1_pos[0] + x0*sp0
-    p1_pos[1] = p1_pos[1] + y0*sp0
+    next_p1_pos = [0,0]
+    next_p1_pos[0] = p1_pos[0] + x0*sp0
+    next_p1_pos[1] = p1_pos[1] + y0*sp0
+
+    p12norm = np.linalg.norm(np.array(next_p1_pos) - p2Array) 
+    p13norm = np.linalg.norm(np.array(next_p1_pos) - p3Array) 
+    p14norm = np.linalg.norm(np.array(next_p1_pos) - p4Array) 
+
+    if p12norm > P_RADIUS * 2 and p13norm  > P_RADIUS * 2 and p14norm  > P_RADIUS * 2:
+      p1_pos[0] = p1_pos[0] + x0*sp0
+      p1_pos[1] = p1_pos[1] + y0*sp0
+    else:
+      debugStatus = "contact!!"
  
+  #P2移動
   if status != 'p2keep' and status != 'getPoint':
-    p2_pos[0] = p2_pos[0] + x1*sp1
-    p2_pos[1] = p2_pos[1] + y1*sp1
+    next_p2_pos = [0,0]
+    next_p2_pos[0] = p2_pos[0] + x1*sp1
+    next_p2_pos[1] = p2_pos[1] + y1*sp1
+
+    p21norm = np.linalg.norm(np.array(next_p2_pos) - p1Array) 
+    p23norm = np.linalg.norm(np.array(next_p2_pos) - p3Array) 
+    p24norm = np.linalg.norm(np.array(next_p2_pos) - p4Array) 
+
+    if p21norm > P_RADIUS * 2 and p23norm > P_RADIUS * 2 and p24norm > P_RADIUS * 2:
+      p2_pos[0] = p2_pos[0] + x1*sp1
+      p2_pos[1] = p2_pos[1] + y1*sp1
+    else:
+      debugStatus = "contact!!"
+
+  screen.blit(subInfoFont.render('debagStatus : ' + debugStatus, True, (255, 255, 255)), [480, 530]) 
 
   #---------------------------
   #パスのベクトルマーカー制御
