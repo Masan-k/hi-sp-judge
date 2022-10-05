@@ -211,13 +211,18 @@ while True:
   p3Array = np.array(p3_pos)
   p4Array = np.array(p4_pos)
 
+  interval = P_RADIUS * 2
   #P1移動
   if status != 'p1keep' and status != 'getPoint':
     next_p1_pos = [0,0]
     next_p1_pos[0] = p1_pos[0] + x0*sp0
     next_p1_pos[1] = p1_pos[1] + y0*sp0
 
-    p12norm = np.linalg.norm(np.array(next_p1_pos) - p2Array) 
+    if status == 'p2keep':
+      p12norm = np.linalg.norm(np.array(next_p1_pos) - p2Array) - BALL_RADIUS * 2
+    else:
+      p12norm = np.linalg.norm(np.array(next_p1_pos) - p2Array) 
+
     p13norm = np.linalg.norm(np.array(next_p1_pos) - p3Array) 
     p14norm = np.linalg.norm(np.array(next_p1_pos) - p4Array) 
 
@@ -233,7 +238,11 @@ while True:
     next_p2_pos[0] = p2_pos[0] + x1*sp1
     next_p2_pos[1] = p2_pos[1] + y1*sp1
 
-    p21norm = np.linalg.norm(np.array(next_p2_pos) - p1Array) 
+    if status == 'p1keep':
+      p21norm = np.linalg.norm(np.array(next_p2_pos) - p1Array) - BALL_RADIUS * 2
+    else:
+      p21norm = np.linalg.norm(np.array(next_p2_pos) - p1Array) 
+
     p23norm = np.linalg.norm(np.array(next_p2_pos) - p3Array) 
     p24norm = np.linalg.norm(np.array(next_p2_pos) - p4Array) 
 
