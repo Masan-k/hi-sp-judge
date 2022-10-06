@@ -203,12 +203,6 @@ while True:
   pygame.draw.circle(screen, (0,0,0),(655,365),29)
   pygame.draw.circle(screen, COLOR_JOY_RIGHT,(655 + x1*30 ,365 + y1*30),5)
 
-  if user2InputMode == InputMode.PAD:
-    joy2x0 = joy2.get_axis(0)
-    joy2y0 = joy2.get_axis(1)
-    joy2x1 = joy2.get_axis(3)
-    joy2y1 = joy2.get_axis(4)
-
     #screen.blit(subInfoFont.render('x0(j2) : ' + str(joy2x0), True, (255, 255, 255)), [480, 550]) 
     #screen.blit(subInfoFont.render('y0(j2) : ' + str(joy2y0), True, (255, 255, 255)), [480, 570])
 
@@ -245,7 +239,6 @@ while True:
   p3Array = np.array(p3_pos)
   p4Array = np.array(p4_pos)
 
-  #interval = P_RADIUS * 2
   #P1移動
   if status != 'p1keep' and status != 'getPoint':
     next_p1_pos = [0,0]
@@ -283,6 +276,12 @@ while True:
       p2_pos[1] = p2_pos[1] + y1*sp1
 
   #P3移動
+  if user2InputMode == InputMode.PAD:
+    joy2x0 = joy2.get_axis(0)
+    joy2y0 = joy2.get_axis(1)
+    joy2x1 = joy2.get_axis(3)
+    joy2y1 = joy2.get_axis(4)
+
   sp3 = 3
   next_p3_pos = [0,0]
   next_p3_pos[0] = p3_pos[0] + joy2x0 * sp3
@@ -300,9 +299,31 @@ while True:
 
   p34norm = np.linalg.norm(np.array(next_p3_pos) - p4Array) 
 
+  #プレイヤー通しの重複回避処理
   if p31norm > P_RADIUS * 2 and p32norm > P_RADIUS * 2 and p34norm > P_RADIUS * 2:
     p3_pos[0] = p3_pos[0] + joy2x0*sp3
     p3_pos[1] = p3_pos[1] + joy2y0*sp3
+
+    #ディスクをキャッチプレイヤーに他プレイやーが接していた場合、
+    #レシーバーから離れるのはOKだが近づくのはNG
+  else:
+    if status == "p1keep":
+      now_p31norm = np.linalg.norm(np.array(p3_pos) - p1Array)
+      if P_RADIUS*2 <= now_p31norm and now_p31norm <= P_RADIUS*2 + BALL_RADIUS*2 :
+        next_p31norm = np.linalg.norm(np.array(next_p3_pos) - p1Array)
+        if next_p31norm > P_RADIUS*2:
+          p3_pos[0] = p3_pos[0] + joy2x0*sp3
+          p3_pos[1] = p3_pos[1] + joy2y0*sp3
+
+    elif status == "p2keep":
+      now_p32norm = np.linalg.norm(np.array(p3_pos) - p2Array)
+      if P_RADIUS*2 <= now_p32norm and now_p32norm <= P_RADIUS*2 + BALL_RADIUS*2 :
+        next_p32norm = np.linalg.norm(np.array(next_p3_pos) - p2Array)
+        if next_p32norm > P_RADIUS*2:
+          p3_pos[0] = p3_pos[0] + joy2x0*sp3
+          p3_pos[1] = p3_pos[1] + joy2y0*sp3
+
+
 
   #P4移動
   sp4 = 3
@@ -325,7 +346,27 @@ while True:
   if p41norm > P_RADIUS * 2 and p42norm > P_RADIUS * 2 and p43norm > P_RADIUS * 2:
     p4_pos[0] = p4_pos[0] + joy2x1*sp4
     p4_pos[1] = p4_pos[1] + joy2y1*sp4
-  
+
+    #ディスクをキャッチプレイヤーに他プレイやーが接していた場合、
+    #レシーバーから離れるのはOKだが近づくのはNG
+  else:
+    if status == "p1keep":
+      now_p41norm = np.linalg.norm(np.array(p4_pos) - p1Array)
+      if P_RADIUS*2 <= now_p41norm and now_p41norm <= P_RADIUS*2 + BALL_RADIUS*2 :
+        next_p41norm = np.linalg.norm(np.array(next_p4_pos) - p1Array)
+        if next_p41norm > P_RADIUS*2:
+          p4_pos[0] = p4_pos[0] + joy2x1*sp4
+          p4_pos[1] = p4_pos[1] + joy2y1*sp4
+
+    elif status == "p2keep":
+      now_p42norm = np.linalg.norm(np.array(p4_pos) - p2Array)
+      if P_RADIUS*2 <= now_p42norm and now_p42norm <= P_RADIUS*2 + BALL_RADIUS*2 :
+        next_p42norm = np.linalg.norm(np.array(next_p4_pos) - p2Array)
+        if next_p42norm > P_RADIUS*2:
+          p4_pos[0] = p4_pos[0] + joy2x1*sp4
+          p4_pos[1] = p4_pos[1] + joy2y1*sp4
+
+ 
   screen.blit(subInfoFont.render('debagStatus : ' + debugStatus, True, (255, 255, 255)), [480, 530]) 
 
   #---------------------------
