@@ -1,5 +1,10 @@
 import pygame,pygame.locals,sys,math,copy
 import numpy as np
+from enum import Enum
+
+class InputMode(Enum):
+  PAD = 1
+  KEY = 2
 
 def drawMarkPass():
   pygame.draw.line(screen,markColor,(passMarkerPos[0]-10,passMarkerPos[1]-10),(passMarkerPos[0]+10,passMarkerPos[1]+10))
@@ -35,9 +40,30 @@ p3_pos = [0,0]
 p4_pos = [0,0]
 
 pygame.init()
+joyCount = pygame.joystick.get_count()
 
-joy = pygame.joystick.Joystick(0)
-joy.init()
+user2InputMode = 0
+if joyCount == 0:
+  print("Please connect GamePad! (count:" + str(joyCount) + ")")
+  exit()
+elif joyCount == 1:
+  user2InputMode = InputMode.KEY 
+  print("Please connect GamePad! (count:" + str(joyCount) + ")")
+  print("userInputMode  >> " + str(user2InputMode))
+
+  joy = pygame.joystick.Joystick(0)
+  joy.init()
+
+else:
+  user2InputMode = InputMode.PAD
+  print("userInputMode  >> " + str(user2InputMode))
+
+  joy = pygame.joystick.Joystick(0)
+  joy.init()
+  
+  joy2 = pygame.joystick.Joystick(1)
+  joy2.init()
+
 
 screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption("HI-SP-JUDGE")
@@ -158,14 +184,13 @@ while True:
   pygame.draw.rect(screen, COLOR_JOY_RIGHT,(686,330,38, 69))
   pygame.draw.rect(screen, (0,0,0),(686,330,38, 69 * (STAMINA_MAX-p2_stamina)/100))
 
-
   #--------------------------------
   #ゲームパッドによる移動処理(P1P2)
   #--------------------------------
   x0 = joy.get_axis(0)
   y0 = joy.get_axis(1)
-  screen.blit(subInfoFont.render('x0 : ' + str(x0), True, (255, 255, 255)), [480, 490]) 
-  screen.blit(subInfoFont.render('y0 : ' + str(y0), True, (255, 255, 255)), [480, 510]) 
+  #screen.blit(subInfoFont.render('x0 : ' + str(x0), True, (255, 255, 255)), [480, 490]) 
+  #screen.blit(subInfoFont.render('y0 : ' + str(y0), True, (255, 255, 255)), [480, 510]) 
 
   x1 = joy.get_axis(3)
   y1 = joy.get_axis(4)
@@ -177,6 +202,15 @@ while True:
   pygame.draw.circle(screen, (0,255,0),(655,365),30)
   pygame.draw.circle(screen, (0,0,0),(655,365),29)
   pygame.draw.circle(screen, COLOR_JOY_RIGHT,(655 + x1*30 ,365 + y1*30),5)
+
+  if user2InputMode == InputMode.PAD:
+    joy2x0 = joy2.get_axis(0)
+    joy2y0 = joy2.get_axis(1)
+    joy2x1 = joy2.get_axis(3)
+    joy2y1 = joy2.get_axis(4)
+
+    #screen.blit(subInfoFont.render('x0(j2) : ' + str(joy2x0), True, (255, 255, 255)), [480, 550]) 
+    #screen.blit(subInfoFont.render('y0(j2) : ' + str(joy2y0), True, (255, 255, 255)), [480, 570])
 
   #P1加速設定
   if joy.get_button(9) == 0:
@@ -211,7 +245,7 @@ while True:
   p3Array = np.array(p3_pos)
   p4Array = np.array(p4_pos)
 
-  interval = P_RADIUS * 2
+  #interval = P_RADIUS * 2
   #P1移動
   if status != 'p1keep' and status != 'getPoint':
     next_p1_pos = [0,0]
@@ -229,8 +263,6 @@ while True:
     if p12norm > P_RADIUS * 2 and p13norm  > P_RADIUS * 2 and p14norm  > P_RADIUS * 2:
       p1_pos[0] = p1_pos[0] + x0*sp0
       p1_pos[1] = p1_pos[1] + y0*sp0
-    else:
-      debugStatus = "contact!!"
  
   #P2移動
   if status != 'p2keep' and status != 'getPoint':
@@ -249,9 +281,51 @@ while True:
     if p21norm > P_RADIUS * 2 and p23norm > P_RADIUS * 2 and p24norm > P_RADIUS * 2:
       p2_pos[0] = p2_pos[0] + x1*sp1
       p2_pos[1] = p2_pos[1] + y1*sp1
-    else:
-      debugStatus = "contact!!"
 
+  #P3移動
+  sp3 = 3
+  next_p3_pos = [0,0]
+  next_p3_pos[0] = p3_pos[0] + joy2x0 * sp3
+  next_p3_pos[1] = p3_pos[1] + joy2y0 * sp3
+
+  if status == 'p1keep':
+    p31norm = np.linalg.norm(np.array(next_p3_pos) - p1Array) - BALL_RADIUS * 2
+  else:
+    p31norm = np.linalg.norm(np.array(next_p3_pos) - p1Array)
+
+  if status == 'p2keep':
+    p32norm = np.linalg.norm(np.array(next_p3_pos) - p2Array) - BALL_RADIUS * 2
+  else:
+    p32norm = np.linalg.norm(np.array(next_p3_pos) - p2Array) 
+
+  p34norm = np.linalg.norm(np.array(next_p3_pos) - p4Array) 
+
+  if p31norm > P_RADIUS * 2 and p32norm > P_RADIUS * 2 and p34norm > P_RADIUS * 2:
+    p3_pos[0] = p3_pos[0] + joy2x0*sp3
+    p3_pos[1] = p3_pos[1] + joy2y0*sp3
+
+  #P4移動
+  sp4 = 3
+  next_p4_pos = [0,0]
+  next_p4_pos[0] = p4_pos[0] + joy2x1 * sp4
+  next_p4_pos[1] = p4_pos[1] + joy2y1 * sp4
+
+  if status == 'p1keep':
+    p41norm = np.linalg.norm(np.array(next_p4_pos) - p1Array) - BALL_RADIUS * 2
+  else:
+    p41norm = np.linalg.norm(np.array(next_p4_pos) - p1Array)
+
+  if status == 'p2keep':
+    p42norm = np.linalg.norm(np.array(next_p4_pos) - p2Array) - BALL_RADIUS * 2
+  else:
+    p42norm = np.linalg.norm(np.array(next_p4_pos) - p2Array) 
+
+  p43norm = np.linalg.norm(np.array(next_p4_pos) - p3Array) 
+
+  if p41norm > P_RADIUS * 2 and p42norm > P_RADIUS * 2 and p43norm > P_RADIUS * 2:
+    p4_pos[0] = p4_pos[0] + joy2x1*sp4
+    p4_pos[1] = p4_pos[1] + joy2y1*sp4
+  
   screen.blit(subInfoFont.render('debagStatus : ' + debugStatus, True, (255, 255, 255)), [480, 530]) 
 
   #---------------------------
