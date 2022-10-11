@@ -1,7 +1,8 @@
 import pygame,pygame.locals,sys,math,copy
 import numpy as np
 from enum import Enum
-
+import info
+import field
 class InputMode(Enum):
   PAD = 1
   KEY = 2
@@ -12,20 +13,14 @@ def drawMarkPass():
 
 debugStatus = "init"
 SCREEN_SIZE = (800, 600)
-FIELD_WIDTH = 400
-FIELD_HEIGHT = 500
 
-INIT_X = 50
-INIT_Y = 50
 P_MOVE_SPEED = 8 
 P_RADIUS = 10
 BALL_RADIUS = 5 
-GOAL_ARIA = 150
 
 COLOR_JOY_LEFT = [150,150,255]
 COLOR_JOY_RIGHT = [150,255,150]
 COLOR_JOY_STOP = [150,150,150]
-
 COLOR_DIFENSE = [255,150,150]
 
 STAMINA_MAX = 100
@@ -70,6 +65,7 @@ pygame.display.set_caption("HI-SP-JUDGE")
 
 mainInfoFont= pygame.font.SysFont("ubuntu",15)
 subInfoFont = pygame.font.SysFont("ubuntu",12)
+
 status = "init"
 ballPassPos = [0,0]
 ballPassPosX = 0
@@ -79,10 +75,13 @@ passMarkerPos = [0,0]
 clock= pygame.time.Clock()
 stageCode = ""
 stageName = ""
-
+  
+field = field.field(pygame,screen)
+info = info.info(pygame,screen)
 while True:
   screen.fill((0,0,0))
   if joy.get_button(7) == 1: status = 'init' #スタートで初期化
+
   if status == 'init':
     status = 'p1keep'
     ball_pos = [150,150]
@@ -102,87 +101,12 @@ while True:
   #------------
   #コートの描画
   #------------
-  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y), (INIT_X + FIELD_WIDTH, INIT_Y))
-  pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH, INIT_Y), (INIT_X + FIELD_WIDTH, INIT_Y + FIELD_HEIGHT))
-  pygame.draw.line(screen, (255,255,255), (INIT_X + FIELD_WIDTH, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y + FIELD_HEIGHT))
-  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y + FIELD_HEIGHT), (INIT_X, INIT_Y))
+  field.draw()
 
-  pygame.draw.line(screen, (255,255,255), (INIT_X, INIT_Y + GOAL_ARIA), (INIT_X + FIELD_WIDTH , INIT_Y + GOAL_ARIA))
-  pygame.draw.rect(screen, (0,0,255), (INIT_X + 2 , INIT_Y + 2, FIELD_WIDTH - 3 , GOAL_ARIA - 3))
-  pygame.draw.rect(screen, (0,0,0), (INIT_X + 4 , INIT_Y + 4, FIELD_WIDTH - 7 , GOAL_ARIA - 7))
-   
   #------------
   #情報表示
   #------------
-  #ステージ＆ステータス
-  screen.blit(mainInfoFont.render('STAGE', True, (255, 255, 255)), [470, 80]) 
-  screen.blit(mainInfoFont.render(' : ' + stageCode + "." + stageName, True, (255, 255, 255)), [550, 80]) 
-
-  if status == 'p1pass' or status == 'p2pass' or status == 'p1keep' or status == 'p2keep':
-    dispStatus = ' : ON OFFENCE'
-    dispColor = [255,255,255]
-  elif status == 'offCourt':
-    dispStatus = ' : FAILURE(OUT OF BOUNDS)'
-    dispColor = [255,100,100]
-  elif status == 'getPoint':
-    dispStatus = ' : CLEAR!!'
-    dispColor = [100,100,255]
-  elif status == 'interception':
-    dispStatus = ' : FAILURE(INTERCEPTION)'
-    dispColor = [255,100,100]
-
-
-  screen.blit(mainInfoFont.render('STATUS', True, (255, 255, 255)), [470, 120]) 
-  screen.blit(mainInfoFont.render(dispStatus, True, dispColor), [550, 120]) 
-  #ゲームパッド
-  pygame.draw.rect(screen, (255,255,255),(500,180,250,250))
-  pygame.draw.rect(screen, (0,0,0),(501,181,248,248))
-
-  #pygame.draw.rect(screen, (255,255,255),(525,200,200,200)) #base
-  pygame.draw.rect(screen, (255,255,255),(525,250,40,150))
-  pygame.draw.rect(screen, (0,0,0),(526,251,38,148))
-  pygame.draw.rect(screen, (255,255,255),(685,250,40,150))
-  pygame.draw.rect(screen, (0,0,0),(686,251,38,148))
-  
-  pygame.draw.rect(screen, (255,255,255),(525,250,200,80))
-  pygame.draw.rect(screen, (0,0,0),(526,251,198,78))
-
-  #十字キー
-  pygame.draw.line(screen, (255,255,255), (565, 270), (565, 310))
-  pygame.draw.line(screen, (255,255,255), (545, 290), (585, 290))
-
-  #ボタン(ABXY)
-  BTN_DIS = 18
-  pygame.draw.circle(screen, (255,255,255), (685-BTN_DIS,290),10)
-  pygame.draw.circle(screen, (0,0,0), (685-BTN_DIS,290),9)
-  pygame.draw.circle(screen, (255,255,255), (685,290-BTN_DIS),10)
-  pygame.draw.circle(screen, (0,0,0), (685,290-BTN_DIS),9)
-  pygame.draw.circle(screen, (255,255,255), (685+BTN_DIS,290),10)
-  pygame.draw.circle(screen, (0,0,0), (685+BTN_DIS,290),9)
-  pygame.draw.circle(screen, (255,255,255), (685,290+BTN_DIS),10)
-  pygame.draw.circle(screen, (0,0,0), (685,290+BTN_DIS),9)
-
-  #スタートボタン
-  pygame.draw.rect(screen, (255,200,200), (595,280,60,15))
-  pygame.draw.rect(screen, (0,0,0), (596,281,58,13))
-  screen.blit(subInfoFont.render('RESTART', True, (255, 200, 200)), [600, 280]) 
-
-  #ボタン（RL)
-  screen.blit(mainInfoFont.render('INFO : INPUT', True, (255, 255, 255)), [565, 190]) 
-  pygame.draw.rect(screen, (255,255,255),(545,230,50,20))
-  pygame.draw.rect(screen, (0,0,0),(546,231,48,18))
-  pygame.draw.rect(screen, (0,255,255),(655,230,50,20))
-  pygame.draw.rect(screen, (0,0,0),(656,231,48,18))
-  screen.blit(subInfoFont.render('PASS', True, (0, 255, 255)), [665, 232]) 
-
-  #TIPS
-  screen.blit(subInfoFont.render('TIPS : ', True, (255, 255, 255)), [480, 450]) 
-  screen.blit(subInfoFont.render('Stage selection is a numerical input on the keyboard.', True, (255, 255, 255)), [480, 470]) 
-
-  pygame.draw.rect(screen, COLOR_JOY_LEFT,(526,330,38, 69))
-  pygame.draw.rect(screen, (0,0,0),(526,330,38, 69 * (STAMINA_MAX-p1_stamina)/100))
-  pygame.draw.rect(screen, COLOR_JOY_RIGHT,(686,330,38, 69))
-  pygame.draw.rect(screen, (0,0,0),(686,330,38, 69 * (STAMINA_MAX-p2_stamina)/100))
+  info.draw(status)
 
   #--------------------------------
   #ゲームパッドによる移動処理(P1P2)
@@ -405,10 +329,10 @@ while True:
   #ボールコート外判定
   #---------------------
   if status == 'p1pass' or status == 'p2pass':
-    if ballPassPosX + BALL_RADIUS < INIT_X or \
-       ballPassPosY + BALL_RADIUS < INIT_Y or \
-       ballPassPosX - BALL_RADIUS > INIT_X + FIELD_WIDTH or \
-       ballPassPosY - BALL_RADIUS > INIT_Y + FIELD_HEIGHT:
+    if ballPassPosX + BALL_RADIUS < field.START_X or \
+       ballPassPosY + BALL_RADIUS < field.START_Y or \
+       ballPassPosX - BALL_RADIUS > field.START_X + field.WIDTH or \
+       ballPassPosY - BALL_RADIUS > field.START_Y + field.HEIGHT:
       status = 'offCourt'
 
   #---------------------------
@@ -503,10 +427,10 @@ while True:
       elif status == 'p2pass': status = 'p1keep'
  
       # 得点判定
-      if ballPassPosX >= INIT_X \
-         and ballPassPosX <= INIT_X + FIELD_WIDTH \
-         and ballPassPosY >= INIT_Y \
-         and ballPassPosY <= INIT_Y + GOAL_ARIA:
+      if ballPassPosX >= field.START_X \
+         and ballPassPosX <= field.START_X + field.WIDTH \
+         and ballPassPosY >= field.START_Y \
+         and ballPassPosY <= field.START_Y + field.GOAL_ARIA:
         status = 'getPoint'
 
   pygame.display.update()
