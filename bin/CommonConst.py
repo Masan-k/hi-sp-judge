@@ -7,3 +7,6 @@ COLOR_DIFENSE = [255,150,150]
 
 FONT_MAIN = pygame.font.SysFont("ubuntu",15)
 FONT_SUB = pygame.font.SysFont("ubuntu",12)
+
+P_RADIUS = 10
+BALL_RADIUS = 5 
