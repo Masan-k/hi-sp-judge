@@ -2,9 +2,8 @@ import pygame
 import pygame.locals
 import sys
 import math
-import copy
 import numpy as np
-from enum import Enum
+import menu
 import info
 import field
 import player
@@ -12,10 +11,6 @@ import ball
 import CommonConst as common
 debugStatus = "init"
 SCREEN_SIZE = (800, 600)
-
-#P_MOVE_SPEED = 8 
-#P_RADIUS = 10
-#BALL_RADIUS = 5 
 
 pygame.init()
 joyCount = pygame.joystick.get_count()
@@ -37,7 +32,13 @@ else:
 screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption("HI-SP-JUDGE")
 
-status = ""
+menu = menu.menu(pygame,screen)
+while True:
+  screen.fill((0,0,0))
+  menu.update()
+  pygame.display.update()
+  if menu.status == "decision":break
+
 stageCode = ""
 stageName = ""
 

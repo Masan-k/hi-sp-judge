@@ -2,13 +2,12 @@ import CommonConst as common
 import numpy as np
 from enum import Enum
 STAMINA_MAX = 100
+
 class InputMode(Enum):
   PAD = 1
   KEY = 2
 
 class player:
-
-
   def __init__(self,py, sc):
     self.pygame = py
     self.screen = sc
