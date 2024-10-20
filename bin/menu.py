@@ -6,7 +6,7 @@ SELECT_COLOR = (255,127,80)
 KEEP_COLOR = (255,255,255)
 
 CURSOR_WIDTH = 60 
-CURSOR_WIDTH_LONG = 93 
+CURSOR_WIDTH_PLAY = 70 
 CURCOR_THICKNESS = 3
 
 BTN_HEIGHT = 32
@@ -38,6 +38,8 @@ class menu:
   def update(self):
     self.screen.fill((0,0,0))
     self.screen.blit(self.FONT_TITLE.render('TWO VS TWO', True, (255, 255, 255)), [200, 50]) 
+
+    self.screen.blit(self.FONT_TITLE.render('Please connect GamePad!', True, (255, 0, 0)), [200, 110]) 
 
     self.screen.blit(self.FONT_SELECT.render('D1:', True, (255, 255, 255)), [70, 250]) 
     self.screen.blit(self.FONT_SELECT.render('NONE', True, (255, 255, 255)), [170, 250]) 
@@ -91,7 +93,7 @@ class menu:
     self.screen.blit(self.FONT_RUN.render('cursorCol >> ' + str(self.cursorCol), True, (255, 255, 255)), [500, 550]) 
     
     if self.cursorRow == 3:
-      self.pygame.draw.line(self.screen, SELECT_COLOR, (350, 500+40), (350 + CURSOR_WIDTH_LONG ,500+40), width = CURCOR_THICKNESS)
+      self.pygame.draw.line(self.screen, SELECT_COLOR, (350, 500+40), (350 + CURSOR_WIDTH_PLAY ,500+40), width = CURCOR_THICKNESS)
 
     if self.cursorRow == 1:
       colorD1 = SELECT_COLOR

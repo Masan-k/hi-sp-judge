@@ -17,7 +17,7 @@ joyCount = pygame.joystick.get_count()
 
 if joyCount == 0:
   print("Please connect GamePad! (count:" + str(joyCount) + ")")
-  exit()
+#  exit()
 elif joyCount == 1:
   joy = pygame.joystick.Joystick(0)
   joy.init()
